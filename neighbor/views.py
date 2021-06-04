@@ -46,7 +46,7 @@ class BusinessList(APIView):
     try:
         return Business.objects.get(pk=pk)
     except Business.DoesNotExist:
-        return Http404
+        return Http404()
 
   def get(self, request,format=None):
     business=Business.objects.all()
@@ -57,21 +57,37 @@ class BusinessList(APIView):
     serializers=BusinessSerializers(data=request.data)
     if serializers.is_valid():
       serializers.save()
-      return Response(serializers.data, status=status.HTTP_200_OK)
+      business=serializers.data
+      response = {
+          'data': {
+              'business': dict(business),
+              'status': 'success',
+              'message': 'business created successfully',
+          }
+      }
+      return Response(response, status=status.HTTP_200_OK)
     return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
 
   def put(self, request, pk, format=None):
-    users = self.get_business(pk)
-    serializers = BusinessSerializers(users, request.data)
+    business = self.get_business(pk)
+    serializers = BusinessSerializers(business, request.data)
     if serializers.is_valid():
       serializers.save()
-      return Response(serializers.data)
+      business_list=serializers.data
+      response = {
+          'data': {
+              'business': dict(business_list),
+              'status': 'success',
+              'message': 'business updated successfully',
+          }
+      }
+      return Response(response)
     else:
       return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
 
   def delete(self, request, pk, format=None):
-    users = self.get_business(pk)
-    users.delete()
+    business = self.get_business(pk)
+    business.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 class UserList(APIView):
@@ -79,7 +95,7 @@ class UserList(APIView):
     try:
         return User.objects.get(pk=pk)
     except User.DoesNotExist:
-        return Http404
+        raise Http404()
 
   def get(self,request,format=None):
     users=User.objects.all()
@@ -90,7 +106,16 @@ class UserList(APIView):
     serializers=UserSerializer(data=request.data)
     if serializers.is_valid():
       serializers.save()
-      return Response(serializers.data, status=status.HTTP_200_OK)
+
+      users=serializers.data
+      response={
+        'data':{
+          'users':dict(users),
+          'status':'success',
+          'message':'user created successfully',
+        }
+      }
+      return Response(response, status=status.HTTP_200_OK)
     return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
 
   def put(self,request,pk,format=None):
@@ -98,7 +123,15 @@ class UserList(APIView):
     serializers=UserSerializer(users,request.data)
     if serializers.is_valid():
       serializers.save()
-      return Response(serializers.data)
+      users_list=serializers.data
+      response = {
+          'data': {
+              'users': dict(users_list),
+              'status': 'success',
+              'message': 'user updated successfully',
+          }
+      }
+      return Response(response, status=status.HTTP_200_OK)
     else:
       return Response(serializers.errors,status=status.HTTP_400_BAD_REQUEST)
     
