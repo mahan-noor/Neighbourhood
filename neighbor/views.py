@@ -5,7 +5,7 @@ from .models import *
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
-from django.http import Http404
+from django.http import Http404,response
 
 # Create your views here.
 class NeighborhoodList(APIView):
@@ -13,7 +13,7 @@ class NeighborhoodList(APIView):
     try:
         return Neighborhood.objects.get(pk=pk)
     except Neighborhood.DoesNotExist:
-        return Http404
+        return Http404()
 
   def get(self,request,format=None):
     neighborhood= Neighborhood.objects.all()
@@ -24,21 +24,37 @@ class NeighborhoodList(APIView):
     serializers=NeighborhoodSerializer(data=request.data)
     if serializers.is_valid():
       serializers.save()
-      return Response(serializers.data, status=status.HTTP_200_OK)
+      neighborhood=serializers.data
+      response = {
+          'data': {
+              'neighborhood': dict(neighborhood),
+              'status': 'success',
+              'message': 'neighborhood created successfully',
+          }
+      }
+      return Response(response)
     return Response(serializers.errors , status= status.HTTP_400_BAD_REQUEST)
 
   def put(self, request, pk, format=None):
-    users = self.get_neighborhood(pk)
-    serializers = NeighborhoodSerializer(users, request.data)
+    neighborhood = self.get_neighborhood(pk)
+    serializers = NeighborhoodSerializer(neighborhood, request.data)
     if serializers.is_valid():
       serializers.save()
-      return Response(serializers.data)
+      neighborhood=serializers.data
+      response = {
+          'data': {
+              'neighborhood': dict(neighborhood),
+              'status': 'success',
+              'message': 'neighborhood updated successfully',
+          }
+      }
+      return Response(response)
     else:
       return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
 
   def delete(self, request, pk, format=None):
-    users = self.get_neighborhood(pk)
-    users.delete()
+    neighborhood = self.get_neighborhood(pk)
+    neighborhood.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 class BusinessList(APIView):
@@ -50,11 +66,11 @@ class BusinessList(APIView):
 
   def get(self, request,format=None):
     business=Business.objects.all()
-    serializers=BusinessSerializers(business, many=True)
+    serializers=BusinessSerializer(business, many=True)
     return Response(serializers.data)
 
   def post(self, request, format=None):
-    serializers=BusinessSerializers(data=request.data)
+    serializers=BusinessSerializer(data=request.data)
     if serializers.is_valid():
       serializers.save()
       business=serializers.data
@@ -70,7 +86,7 @@ class BusinessList(APIView):
 
   def put(self, request, pk, format=None):
     business = self.get_business(pk)
-    serializers = BusinessSerializers(business, request.data)
+    serializers = BusinessSerializer(business, request.data)
     if serializers.is_valid():
       serializers.save()
       business_list=serializers.data
